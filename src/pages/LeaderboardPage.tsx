@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/db/supabase';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import type { User } from '@/types/types';
 import { Trophy, TrendingUp, TrendingDown, Medal, Award, Crown } from 'lucide-react';
+import { useRealtimeAllBets } from '@/hooks/useRealtimeActivity';
 
 type Scope = 'worldwide' | 'country' | 'city' | 'friends';
 type Timeframe = 'week' | 'month' | 'alltime';
@@ -15,6 +16,17 @@ export default function LeaderboardPage() {
   const [timeframe, setTimeframe] = useState<Timeframe>('week');
   const [leaders, setLeaders] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Realtime leaderboard updates with debounce
+  const handleLeaderboardUpdate = useCallback(() => {
+    // Debounce to avoid excessive refetches
+    const timer = setTimeout(() => {
+      fetchLeaderboard();
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [scope, timeframe, user]);
+
+  useRealtimeAllBets(handleLeaderboardUpdate);
 
   useEffect(() => {
     fetchLeaderboard();

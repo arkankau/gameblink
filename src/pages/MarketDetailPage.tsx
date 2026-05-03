@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/db/supabase';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,8 @@ import type { Market, Bet, BetWithUser, Comment, CommentWithUser } from '@/types
 import { TrendingUp, Users, Clock, MessageSquare } from 'lucide-react';
 import { Countdown, formatCloseDateTime } from '@/components/ui/countdown';
 import { MarketChart } from '@/components/ui/market-chart';
+import { useRealtimeMarket } from '@/hooks/useRealtimeMarkets';
+import { useRealtimeComments, useRealtimeBets } from '@/hooks/useRealtimeActivity';
 
 export default function MarketDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +32,23 @@ export default function MarketDetailPage() {
   const [commentBody, setCommentBody] = useState('');
   const [commentSort, setCommentSort] = useState<'new' | 'top' | 'hot'>('new');
   const [upvotingId, setUpvotingId] = useState<string | null>(null);
+
+  // Realtime subscriptions
+  const handleMarketUpdate = useCallback(() => {
+    if (id) fetchMarket();
+  }, [id]);
+
+  const handleBetsUpdate = useCallback(() => {
+    if (id) fetchBets();
+  }, [id]);
+
+  const handleCommentsUpdate = useCallback(() => {
+    if (id) fetchComments();
+  }, [id]);
+
+  useRealtimeMarket(id, handleMarketUpdate);
+  useRealtimeBets(id, handleBetsUpdate);
+  useRealtimeComments(id, handleCommentsUpdate);
 
   useEffect(() => {
     if (id) {

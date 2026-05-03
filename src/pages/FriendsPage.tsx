@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { User, FriendRequestWithUser } from '@/types/types';
 import { Search, UserPlus, Check, X } from 'lucide-react';
+import { isUserOnline } from '@/hooks/useOnlineStatus';
 
 export default function FriendsPage() {
   const { user } = useAuth();
@@ -244,7 +245,12 @@ export default function FriendsPage() {
             {friends.map((friend) => (
               <div key={friend.id} className="flex items-center justify-between rounded-lg border border-border p-3">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{friend.avatar}</span>
+                  <div className="relative">
+                    <span className="text-2xl">{friend.avatar}</span>
+                    {isUserOnline(friend.last_active_at) && (
+                      <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-green-500 ring-2 ring-background" />
+                    )}
+                  </div>
                   <div>
                     <p className="font-medium">{friend.username}</p>
                     <p className="text-xs text-muted-foreground">

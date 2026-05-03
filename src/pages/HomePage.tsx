@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/db/supabase';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Countdown, formatCloseDateTime } from '@/components/ui/countdown';
 import { MarketChart } from '@/components/ui/market-chart';
 import { MarketTicker } from '@/components/ui/market-ticker';
+import { useRealtimeMarkets } from '@/hooks/useRealtimeMarkets';
 
 const categories: MarketCategory[] = [
   'Sports',
@@ -37,6 +38,14 @@ export default function HomePage() {
     online_users: 0,
   });
   const [loading, setLoading] = useState(true);
+
+  // Realtime market updates
+  const handleMarketUpdate = useCallback(() => {
+    fetchMarkets();
+    fetchStats();
+  }, []);
+
+  useRealtimeMarkets(handleMarketUpdate);
 
   useEffect(() => {
     fetchMarkets();
