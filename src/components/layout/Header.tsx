@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -15,6 +15,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 export function Header() {
   const { user, signOut } = useAuth();
+  const location = useLocation();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -25,6 +26,13 @@ export function Header() {
     { to: '/leagues', label: 'Leagues' },
     { to: '/daily', label: 'Daily Login' },
   ];
+
+  const isActive = (path: string) => {
+    if (path === '/') {
+      return location.pathname === '/' || location.pathname === '/markets';
+    }
+    return location.pathname.startsWith(path);
+  };
 
   return (
     <>
@@ -40,7 +48,11 @@ export function Header() {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                  className={`text-sm font-medium transition-colors hover:text-foreground ${
+                    isActive(link.to)
+                      ? 'border-b-2 border-primary text-primary'
+                      : 'text-muted-foreground'
+                  }`}
                 >
                   {link.label}
                 </Link>
@@ -150,7 +162,11 @@ export function Header() {
                       key={link.to}
                       to={link.to}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="text-sm font-medium"
+                      className={`text-sm font-medium transition-colors ${
+                        isActive(link.to)
+                          ? 'text-primary'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
                     >
                       {link.label}
                     </Link>

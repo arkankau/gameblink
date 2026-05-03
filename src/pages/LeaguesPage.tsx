@@ -24,6 +24,9 @@ export default function LeaguesPage() {
   const [description, setDescription] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
 
+  const [inviteCode, setInviteCode] = useState('');
+  const [joiningLeague, setJoiningLeague] = useState(false);
+
   useEffect(() => {
     if (user) {
       fetchMyLeagues();
@@ -116,6 +119,50 @@ export default function LeaguesPage() {
     }
   };
 
+  const handleJoinByInviteCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!user) {
+      toast.error('Please login to join leagues');
+      return;
+    }
+
+    const trimmedCode = inviteCode.trim();
+    if (!trimmedCode) {
+      toast.error('Please enter an invite code');
+      return;
+    }
+
+    setJoiningLeague(true);
+
+    try {
+      const { data: league, error } = await supabase.rpc('join_league_by_invite_code', {
+        p_invite_code: trimmedCode,
+      });
+
+      if (error) {
+        if (error.message.includes('Invalid invite code')) {
+          toast.error('Invalid invite code');
+        } else {
+          toast.error(error.message || 'Failed to join league');
+        }
+        return;
+      }
+
+      toast.success('Joined league successfully!');
+      setInviteCode('');
+      fetchMyLeagues();
+      
+      // Navigate to league detail page
+      window.location.href = `/leagues/${league.id}`;
+    } catch (error: unknown) {
+      const err = error as Error;
+      toast.error(err.message || 'Failed to join league');
+    } finally {
+      setJoiningLeague(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-6xl p-4 md:p-8">
       <div className="mb-6 flex items-center justify-between">
@@ -185,6 +232,23 @@ export default function LeaguesPage() {
           </Dialog>
         )}
       </div>
+
+      {user && (
+        <Card className="mb-8 p-4">
+          <h2 className="mb-3 font-display text-lg">Join Private League</h2>
+          <form onSubmit={handleJoinByInviteCode} className="flex gap-2">
+            <Input
+              placeholder="Enter invite code"
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value)}
+              className="flex-1 px-3"
+            />
+            <Button type="submit" disabled={joiningLeague}>
+              {joiningLeague ? 'Joining...' : 'Join'}
+            </Button>
+          </form>
+        </Card>
+      )}
 
       {user && myLeagues.length > 0 && (
         <div className="mb-8">

@@ -39,6 +39,18 @@ const COUNTRIES = [
   { name: 'Other', code: 'XX' },
 ];
 
+const CITIES_BY_COUNTRY: Record<string, string[]> = {
+  ID: ['Tangerang', 'Jakarta', 'Bandung', 'Surabaya', 'Bali', 'Medan', 'Semarang', 'Makassar', 'Palembang', 'Yogyakarta'],
+  SG: ['Singapore'],
+  MY: ['Kuala Lumpur', 'Johor Bahru', 'Penang', 'Malacca', 'Ipoh'],
+  TH: ['Bangkok', 'Chiang Mai', 'Phuket', 'Pattaya'],
+  PH: ['Manila', 'Quezon City', 'Cebu', 'Davao'],
+  VN: ['Ho Chi Minh City', 'Hanoi', 'Da Nang', 'Nha Trang'],
+  US: ['New York', 'Los Angeles', 'San Francisco', 'Chicago', 'Miami'],
+  GB: ['London', 'Manchester', 'Birmingham', 'Edinburgh'],
+  AU: ['Sydney', 'Melbourne', 'Brisbane', 'Perth'],
+};
+
 export function AuthModal({ open, onOpenChange }: AuthModalProps) {
   const { signIn, signUp, continueAsGuest } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -52,6 +64,23 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
   const [signupCity, setSignupCity] = useState('');
   const [signupCountry, setSignupCountry] = useState('Indonesia');
   const [signupCountryCode, setSignupCountryCode] = useState('ID');
+
+  const handleCountryChange = (countryName: string, countryCode: string) => {
+    setSignupCountry(countryName);
+    setSignupCountryCode(countryCode);
+
+    // Get cities for the new country
+    const cities = CITIES_BY_COUNTRY[countryCode] ?? [];
+    
+    // Reset city if current city is not valid for new country
+    if (!cities.includes(signupCity)) {
+      setSignupCity(cities[0] ?? '');
+    }
+  };
+
+  const getAvailableCities = () => {
+    return CITIES_BY_COUNTRY[signupCountryCode] ?? [];
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,9 +220,10 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                 <Select
                   value={signupCountry}
                   onValueChange={(value) => {
-                    setSignupCountry(value);
                     const country = COUNTRIES.find((c) => c.name === value);
-                    if (country) setSignupCountryCode(country.code);
+                    if (country) {
+                      handleCountryChange(country.name, country.code);
+                    }
                   }}
                 >
                   <SelectTrigger id="signup-country">
@@ -210,18 +240,28 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signup-city">City</Label>
-                <Select value={signupCity} onValueChange={setSignupCity}>
-                  <SelectTrigger id="signup-city">
-                    <SelectValue placeholder="Select city" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {INDONESIAN_CITIES.map((city) => (
-                      <SelectItem key={city} value={city}>
-                        {city}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {getAvailableCities().length > 0 ? (
+                  <Select value={signupCity} onValueChange={setSignupCity}>
+                    <SelectTrigger id="signup-city">
+                      <SelectValue placeholder="Select city" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getAvailableCities().map((city) => (
+                        <SelectItem key={city} value={city}>
+                          {city}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    id="signup-city"
+                    value={signupCity}
+                    onChange={(e) => setSignupCity(e.target.value)}
+                    placeholder="Enter city"
+                    className="px-3"
+                  />
+                )}
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Creating account...' : 'Sign Up'}

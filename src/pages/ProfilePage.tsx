@@ -83,12 +83,6 @@ export default function ProfilePage() {
                 )}
               </div>
             </div>
-
-            <div className="flex gap-2">
-              <Button variant="outline" asChild>
-                <Link to="/my-bets">My Bets</Link>
-              </Button>
-            </div>
           </div>
         </div>
 

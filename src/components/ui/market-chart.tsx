@@ -21,8 +21,9 @@ export function MarketChart({
 }: MarketChartProps) {
   const normalizedHistory = normalizeHistory(history);
 
+  // Use fallback if history has less than 2 points (single point charts look broken)
   const chartData =
-    normalizedHistory.length > 0
+    normalizedHistory.length >= 2
       ? normalizedHistory
       : generateFallbackHistory(currentYesPrice);
 

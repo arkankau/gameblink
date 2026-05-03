@@ -9,6 +9,7 @@ import type { Market, MarketCategory, MarketStats } from '@/types/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { Countdown, formatCloseDateTime } from '@/components/ui/countdown';
 import { MarketChart } from '@/components/ui/market-chart';
+import { MarketTicker } from '@/components/ui/market-ticker';
 
 const categories: MarketCategory[] = [
   'Sports',
@@ -144,6 +145,8 @@ export default function HomePage() {
           <div className="gb-editorial border-y border-border py-2">
             Vol. 04 · Issue 01 · May 02, 2026
           </div>
+
+          <MarketTicker />
 
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <Card className="p-4">

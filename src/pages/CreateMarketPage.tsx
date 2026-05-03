@@ -24,6 +24,22 @@ const categories: MarketCategory[] = [
   'Community',
 ];
 
+function generateInitialMarketHistory(price: number) {
+  const now = Date.now();
+  const safePrice = Number.isFinite(price) ? Math.max(1, Math.min(99, price)) : 50;
+
+  return Array.from({ length: 20 }, (_, i) => {
+    const progress = i / 19;
+    const start = Math.max(1, Math.min(99, safePrice + (Math.random() - 0.5) * 12));
+    const y = start + (safePrice - start) * progress + (Math.random() - 0.5) * 3;
+
+    return {
+      t: now - (19 - i) * 60 * 60 * 1000,
+      y: Math.max(1, Math.min(99, Math.round(y))),
+    };
+  });
+}
+
 export default function CreateMarketPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -68,7 +84,7 @@ export default function CreateMarketPage() {
           yes_price: 50,
           no_price: 50,
           ends_at: new Date(endsAt).toISOString(),
-          history: [{ t: Date.now(), y: 50 }],
+          history: generateInitialMarketHistory(50),
         })
         .select()
         .single();
