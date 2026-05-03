@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthModal } from '@/components/auth/AuthModal';
-import { User, LogOut, Users, Trophy, Flame, Menu } from 'lucide-react';
+import { User, LogOut, Users, Trophy, Flame, Menu, Target } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 export function Header() {
@@ -72,6 +72,13 @@ export function Header() {
                         Profile
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/my-bets" className="flex items-center gap-2">
+                        <Target className="h-4 w-4" />
+                        My Bets
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link to="/friends" className="flex items-center gap-2">
                         <Users className="h-4 w-4" />

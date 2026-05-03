@@ -11,6 +11,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { Market, Bet, BetWithUser, Comment, CommentWithUser } from '@/types/types';
 import { TrendingUp, Users, Clock, MessageSquare } from 'lucide-react';
+import { Countdown, formatCloseDateTime } from '@/components/ui/countdown';
+import { MarketChart } from '@/components/ui/market-chart';
 
 export default function MarketDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -114,6 +116,18 @@ export default function MarketDetailPage() {
 
     if (!market) return;
 
+    // Validate market status
+    if (market.status !== 'live') {
+      toast.error('This market is closed');
+      return;
+    }
+
+    // Validate market not expired
+    if (new Date(market.ends_at) <= new Date()) {
+      toast.error('This market has closed');
+      return;
+    }
+
     if (stake > user.balance) {
       toast.error('Insufficient balance');
       return;
@@ -128,38 +142,30 @@ export default function MarketDetailPage() {
     const shares = Math.floor((stake / priceAtBet) * 100);
     const potentialPayout = shares;
 
-    const { error } = await supabase.from('bets').insert({
-      user_id: user.id,
-      market_id: market.id,
-      side,
-      stake,
-      price_at_bet: priceAtBet,
-      shares,
-      potential_payout: potentialPayout,
-    });
+    try {
+      const { data, error } = await supabase.rpc('place_bet', {
+        p_market_id: market.id,
+        p_side: side,
+        p_stake: stake,
+        p_price_at_bet: priceAtBet,
+        p_shares: shares,
+        p_potential_payout: potentialPayout,
+      });
 
-    if (error) {
+      if (error) {
+        console.error('Bet placement error:', error);
+        toast.error(error.message || 'Failed to place bet');
+        return;
+      }
+
+      toast.success('Bet placed successfully! 🎉');
+      await refreshUser();
+      fetchMarket();
+      fetchBets();
+    } catch (err) {
+      console.error('Unexpected error placing bet:', err);
       toast.error('Failed to place bet');
-      return;
     }
-
-    await supabase
-      .from('users')
-      .update({ balance: user.balance - stake, total_bets: user.total_bets + 1 })
-      .eq('id', user.id);
-
-    await supabase
-      .from('markets')
-      .update({
-        volume: market.volume + stake,
-        bettors: market.bettors + 1,
-      })
-      .eq('id', market.id);
-
-    toast.success('Bet placed successfully! 🎉');
-    await refreshUser();
-    fetchMarket();
-    fetchBets();
   };
 
   const handlePostComment = async () => {
@@ -173,20 +179,34 @@ export default function MarketDetailPage() {
       return;
     }
 
-    const { error } = await supabase.from('comments').insert({
-      market_id: id,
-      user_id: user.id,
-      body: commentBody,
-    });
+    try {
+      const { data, error } = await supabase
+        .from('comments')
+        .insert({
+          market_id: id,
+          user_id: user.id,
+          body: commentBody,
+        })
+        .select('*, user:users(*)')
+        .single();
 
-    if (error) {
+      if (error) {
+        console.error('Comment insert error:', error);
+        toast.error('Failed to post comment');
+        return;
+      }
+
+      if (data) {
+        // Add the new comment to the top of the list
+        setComments([data as unknown as CommentWithUser, ...comments]);
+      }
+
+      setCommentBody('');
+      toast.success('Comment posted');
+    } catch (err) {
+      console.error('Unexpected error posting comment:', err);
       toast.error('Failed to post comment');
-      return;
     }
-
-    setCommentBody('');
-    toast.success('Comment posted');
-    fetchComments();
   };
 
   if (loading) {
@@ -247,7 +267,10 @@ export default function MarketDetailPage() {
               <Clock className="h-4 w-4" />
               Closes
             </div>
-            <p className="text-sm">{new Date(market.ends_at).toLocaleDateString()}</p>
+            <p className="mt-1 text-sm font-medium">{formatCloseDateTime(market.ends_at)}</p>
+            <div className="mt-2">
+              <Countdown endsAt={market.ends_at} />
+            </div>
           </Card>
           <Card className="p-4">
             <div className="text-sm text-muted-foreground">Status</div>
@@ -266,6 +289,15 @@ export default function MarketDetailPage() {
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
+              <Card className="p-6">
+                <h3 className="mb-4 font-display text-xl">Market Price History</h3>
+                <MarketChart 
+                  history={market.history} 
+                  currentYesPrice={market.yes_price}
+                  variant="detail"
+                />
+              </Card>
+
               <Card className="p-6">
                 <h3 className="mb-2 font-display text-xl">Description</h3>
                 <p className="text-muted-foreground">{market.description}</p>
@@ -438,8 +470,16 @@ export default function MarketDetailPage() {
               </div>
             </div>
 
-            <Button onClick={handlePlaceBet} className="w-full" disabled={!user || market.status !== 'live'}>
-              {!user ? 'Login to Bet' : market.status !== 'live' ? 'Market Closed' : 'Place Bet'}
+            <Button 
+              onClick={handlePlaceBet} 
+              className="w-full" 
+              disabled={!user || market.status !== 'live' || new Date(market.ends_at) <= new Date()}
+            >
+              {!user 
+                ? 'Login to Bet' 
+                : market.status !== 'live' || new Date(market.ends_at) <= new Date()
+                ? 'Market Closed' 
+                : 'Place Bet'}
             </Button>
 
             <p className="mt-3 text-center text-xs text-muted-foreground">

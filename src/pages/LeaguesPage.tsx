@@ -68,27 +68,17 @@ export default function LeaguesPage() {
     setLoading(true);
 
     try {
-      const inviteCode = isPrivate ? Math.random().toString(36).substring(2, 10).toUpperCase() : undefined;
+      const inviteCode = isPrivate ? Math.random().toString(36).substring(2, 10).toUpperCase() : null;
 
-      const { data: league, error } = await supabase
-        .from('leagues')
-        .insert({
-          name,
-          icon,
-          description,
-          is_private: isPrivate,
-          invite_code: inviteCode,
-          created_by: user.id,
-        })
-        .select()
-        .single();
+      const { data: league, error } = await supabase.rpc('create_league_with_creator', {
+        p_name: name,
+        p_icon: icon,
+        p_description: description || null,
+        p_is_private: isPrivate,
+        p_invite_code: inviteCode,
+      });
 
       if (error) throw error;
-
-      await supabase.from('league_members').insert({
-        league_id: league.id,
-        user_id: user.id,
-      });
 
       toast.success('League created successfully!');
       setCreateModalOpen(false);
@@ -97,6 +87,7 @@ export default function LeaguesPage() {
       setIcon('🏆');
       setIsPrivate(false);
       fetchMyLeagues();
+      fetchPublicLeagues();
     } catch (error: unknown) {
       const err = error as Error;
       toast.error(err.message || 'Failed to create league');
@@ -200,7 +191,7 @@ export default function LeaguesPage() {
           <h2 className="mb-4 font-display text-xl">My Leagues</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {myLeagues.map((league) => (
-              <Link key={league.id} to={`/league/${league.id}`}>
+              <Link key={league.id} to={`/leagues/${league.id}`}>
                 <Card className="h-full p-4 transition-all hover:border-primary">
                   <div className="mb-3 flex items-start justify-between">
                     <span className="text-3xl">{league.icon}</span>
@@ -243,7 +234,7 @@ export default function LeaguesPage() {
                   )}
                   {isMember ? (
                     <Button variant="outline" className="w-full" asChild>
-                      <Link to={`/league/${league.id}`}>View League</Link>
+                      <Link to={`/leagues/${league.id}`}>View League</Link>
                     </Button>
                   ) : (
                     <Button onClick={() => handleJoinLeague(league.id)} className="w-full">

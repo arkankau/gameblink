@@ -3,8 +3,11 @@ import MarketDetailPage from './pages/MarketDetailPage';
 import CreateMarketPage from './pages/CreateMarketPage';
 import FriendsPage from './pages/FriendsPage';
 import LeaguesPage from './pages/LeaguesPage';
+import LeagueDetailPage from './pages/LeagueDetailPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import DailyLoginPage from './pages/DailyLoginPage';
+import ProfilePage from './pages/ProfilePage';
+import MyBetsPage from './pages/MyBetsPage';
 import type { ReactNode } from 'react';
 
 export interface RouteConfig {
@@ -48,10 +51,28 @@ export const routes: RouteConfig[] = [
     public: true,
   },
   {
+    name: 'League Detail',
+    path: '/leagues/:id',
+    element: <LeagueDetailPage />,
+    public: true,
+  },
+  {
     name: 'Leaderboard',
     path: '/leaderboard',
     element: <LeaderboardPage />,
     public: true,
+  },
+  {
+    name: 'Profile',
+    path: '/profile',
+    element: <ProfilePage />,
+    public: false,
+  },
+  {
+    name: 'My Bets',
+    path: '/my-bets',
+    element: <MyBetsPage />,
+    public: false,
   },
   {
     name: 'Daily Login',

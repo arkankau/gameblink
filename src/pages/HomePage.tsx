@@ -7,6 +7,8 @@ import { Plus, TrendingUp } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { Market, MarketCategory, MarketStats } from '@/types/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { Countdown, formatCloseDateTime } from '@/components/ui/countdown';
+import { MarketChart } from '@/components/ui/market-chart';
 
 const categories: MarketCategory[] = [
   'Sports',
@@ -218,6 +220,14 @@ export default function HomePage() {
                     {market.question}
                   </p>
 
+                  <div className="mb-3">
+                    <MarketChart 
+                      history={market.history} 
+                      currentYesPrice={market.yes_price}
+                      variant="sparkline"
+                    />
+                  </div>
+
                   <div className="mb-3 flex gap-2">
                     <Badge variant="outline" className="text-xs">
                       {market.category}
@@ -255,8 +265,9 @@ export default function HomePage() {
                     <span className="font-mono">{market.bettors} bettors</span>
                   </div>
 
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    Closes: {new Date(market.ends_at).toLocaleDateString()}
+                  <div className="mt-2 flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">{formatCloseDateTime(market.ends_at)}</span>
+                    <Countdown endsAt={market.ends_at} />
                   </div>
                 </Card>
               </Link>

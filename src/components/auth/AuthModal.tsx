@@ -187,21 +187,6 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signup-city">City</Label>
-                <Select value={signupCity} onValueChange={setSignupCity}>
-                  <SelectTrigger id="signup-city">
-                    <SelectValue placeholder="Select city" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {INDONESIAN_CITIES.map((city) => (
-                      <SelectItem key={city} value={city}>
-                        {city}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="signup-country">Country</Label>
                 <Select
                   value={signupCountry}
@@ -218,6 +203,21 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                     {COUNTRIES.map((country) => (
                       <SelectItem key={country.code} value={country.name}>
                         {country.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-city">City</Label>
+                <Select value={signupCity} onValueChange={setSignupCity}>
+                  <SelectTrigger id="signup-city">
+                    <SelectValue placeholder="Select city" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {INDONESIAN_CITIES.map((city) => (
+                      <SelectItem key={city} value={city}>
+                        {city}
                       </SelectItem>
                     ))}
                   </SelectContent>

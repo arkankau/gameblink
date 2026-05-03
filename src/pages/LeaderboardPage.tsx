@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import type { User } from '@/types/types';
-import { Trophy, TrendingUp, TrendingDown } from 'lucide-react';
+import { Trophy, TrendingUp, TrendingDown, Medal, Award, Crown } from 'lucide-react';
 
 type Scope = 'worldwide' | 'country' | 'city' | 'friends';
 type Timeframe = 'week' | 'month' | 'alltime';
@@ -124,37 +124,69 @@ export default function LeaderboardPage() {
       ) : (
         <>
           {leaders.length >= 3 && (
-            <div className="mb-8 grid gap-4 md:grid-cols-3">
-              {[1, 0, 2].map((idx) => {
-                const leader = leaders[idx];
-                if (!leader) return null;
-                const rank = idx + 1;
-                const gain = timeframe === 'week' ? leader.weekly_gain : leader.pnl;
+            <div className="mb-8 grid grid-cols-3 gap-4">
+              {/* Rank 2 - Left */}
+              <Card className="mt-8 p-4 text-center">
+                <div className="mb-2 flex justify-center">
+                  <Medal className="h-14 w-14 text-muted-foreground" />
+                </div>
+                <div className="mb-2 text-4xl font-bold text-muted-foreground">2</div>
+                <div className="mb-2 text-4xl">{leaders[1].avatar}</div>
+                <h3 className="mb-1 font-display text-lg font-semibold">{leaders[1].username}</h3>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  {leaders[1].city}, {leaders[1].country}
+                </p>
+                <p className={`font-mono text-xl font-semibold ${(timeframe === 'week' ? leaders[1].weekly_gain : leaders[1].pnl) >= 0 ? 'text-gb-yes' : 'text-gb-no'}`}>
+                  {(timeframe === 'week' ? leaders[1].weekly_gain : leaders[1].pnl) >= 0 ? '+' : ''}
+                  {(timeframe === 'week' ? leaders[1].weekly_gain : leaders[1].pnl).toLocaleString()}¢
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {leaders[1].wins}W / {leaders[1].losses}L
+                </p>
+              </Card>
 
-                return (
-                  <Card
-                    key={leader.id}
-                    className={`p-6 text-center ${rank === 1 ? 'md:order-2 md:scale-105' : rank === 2 ? 'md:order-1' : 'md:order-3'}`}
-                  >
-                    <div className="mb-3 flex justify-center">
-                      {rank === 1 && <Trophy className="h-12 w-12 text-gb-coin" />}
-                      {rank === 2 && <Trophy className="h-10 w-10 text-muted-foreground" />}
-                      {rank === 3 && <Trophy className="h-8 w-8 text-muted-foreground" />}
-                    </div>
-                    <span className="mb-2 block text-4xl">{leader.avatar}</span>
-                    <h3 className="mb-1 font-display text-xl">{leader.username}</h3>
-                    <p className="mb-2 text-xs text-muted-foreground">
-                      {leader.city}, {leader.country}
-                    </p>
-                    <p className={`font-mono text-2xl ${gain >= 0 ? 'text-gb-yes' : 'text-gb-no'}`}>
-                      {gain >= 0 ? '+' : ''}{gain.toLocaleString()}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {leader.wins}W / {leader.losses}L
-                    </p>
-                  </Card>
-                );
-              })}
+              {/* Rank 1 - Center (Elevated) */}
+              <Card className="relative border-2 border-primary p-6 text-center shadow-lg">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <Crown className="h-8 w-8 text-primary" />
+                </div>
+                <div className="mb-3 flex justify-center">
+                  <Trophy className="h-16 w-16 text-primary" />
+                </div>
+                <div className="mb-2 text-5xl font-bold text-primary">1</div>
+                <div className="mb-3 text-5xl">{leaders[0].avatar}</div>
+                <h3 className="mb-1 font-display text-xl font-bold">{leaders[0].username}</h3>
+                <p className="mb-3 text-xs text-muted-foreground">
+                  {leaders[0].city}, {leaders[0].country}
+                </p>
+                <p className={`font-mono text-2xl font-bold ${(timeframe === 'week' ? leaders[0].weekly_gain : leaders[0].pnl) >= 0 ? 'text-gb-yes' : 'text-gb-no'}`}>
+                  {(timeframe === 'week' ? leaders[0].weekly_gain : leaders[0].pnl) >= 0 ? '+' : ''}
+                  {(timeframe === 'week' ? leaders[0].weekly_gain : leaders[0].pnl).toLocaleString()}¢
+                </p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {leaders[0].wins}W / {leaders[0].losses}L
+                </p>
+              </Card>
+
+              {/* Rank 3 - Right */}
+              <Card className="mt-12 p-4 text-center">
+                <div className="mb-2 flex justify-center">
+                  <Award className="h-12 w-12 text-muted-foreground" />
+                </div>
+                <div className="mb-2 text-3xl font-bold text-muted-foreground">3</div>
+                <div className="mb-2 text-3xl">{leaders[2].avatar}</div>
+                <h3 className="mb-1 font-display font-semibold">{leaders[2].username}</h3>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  {leaders[2].city}, {leaders[2].country}
+                </p>
+                <p className={`font-mono text-lg font-semibold ${(timeframe === 'week' ? leaders[2].weekly_gain : leaders[2].pnl) >= 0 ? 'text-gb-yes' : 'text-gb-no'}`}>
+                  {(timeframe === 'week' ? leaders[2].weekly_gain : leaders[2].pnl) >= 0 ? '+' : ''}
+                  {(timeframe === 'week' ? leaders[2].weekly_gain : leaders[2].pnl).toLocaleString()}¢
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {leaders[2].wins}W / {leaders[2].losses}L
+                </p>
+              </Card>
             </div>
           )}
 
