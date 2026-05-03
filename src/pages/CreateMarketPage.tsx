@@ -68,7 +68,7 @@ export default function CreateMarketPage() {
           yes_price: 50,
           no_price: 50,
           ends_at: new Date(endsAt).toISOString(),
-          history: JSON.stringify([{ t: Date.now(), y: 50 }]),
+          history: [{ t: Date.now(), y: 50 }],
         })
         .select()
         .single();

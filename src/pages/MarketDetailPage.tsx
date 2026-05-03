@@ -28,6 +28,8 @@ export default function MarketDetailPage() {
   const [side, setSide] = useState<'yes' | 'no'>(searchParams.get('side') === 'no' ? 'no' : 'yes');
   const [stake, setStake] = useState<number>(100);
   const [commentBody, setCommentBody] = useState('');
+  const [commentSort, setCommentSort] = useState<'new' | 'top' | 'hot'>('new');
+  const [upvotingId, setUpvotingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -36,6 +38,12 @@ export default function MarketDetailPage() {
       fetchComments();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      fetchComments();
+    }
+  }, [commentSort]);
 
   const fetchMarket = async () => {
     try {
@@ -69,7 +77,7 @@ export default function MarketDetailPage() {
     try {
       const { data, error } = await supabase
         .from('bets')
-        .select('*, user:users(*)')
+        .select('*, user:users!bets_user_id_fkey(*)')
         .eq('market_id', id)
         .order('placed_at', { ascending: false })
         .limit(20);
@@ -88,14 +96,30 @@ export default function MarketDetailPage() {
 
   const fetchComments = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('comments')
-        .select('*, user:users(*)')
+        .select('*, user:users!comments_user_id_fkey(*)')
         .eq('market_id', id)
-        .is('parent_id', null)
-        .order('created_at', { ascending: false });
+        .is('parent_id', null);
 
-      if (!error && data) {
+      // Apply sorting based on commentSort state
+      if (commentSort === 'new') {
+        query = query.order('created_at', { ascending: false });
+      } else if (commentSort === 'top') {
+        query = query.order('upvotes', { ascending: false }).order('created_at', { ascending: false });
+      } else if (commentSort === 'hot') {
+        // Hot: combination of upvotes and recency
+        query = query.order('upvotes', { ascending: false }).order('created_at', { ascending: false });
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Comment fetch error:', error);
+        return;
+      }
+
+      if (data) {
         setComments(data as unknown as CommentWithUser[]);
       }
     } catch (err) {
@@ -187,25 +211,60 @@ export default function MarketDetailPage() {
           user_id: user.id,
           body: commentBody,
         })
-        .select('*, user:users(*)')
+        .select('*, user:users!comments_user_id_fkey(*)')
         .single();
 
       if (error) {
         console.error('Comment insert error:', error);
-        toast.error('Failed to post comment');
+        toast.error(error.message || 'Failed to post comment');
         return;
       }
 
       if (data) {
         // Add the new comment to the top of the list
         setComments([data as unknown as CommentWithUser, ...comments]);
+        setCommentBody('');
+        toast.success('Comment posted');
       }
-
-      setCommentBody('');
-      toast.success('Comment posted');
     } catch (err) {
       console.error('Unexpected error posting comment:', err);
       toast.error('Failed to post comment');
+    }
+  };
+
+  const handleUpvote = async (commentId: string) => {
+    if (!user) {
+      toast.error('Please login to upvote');
+      navigate('/auth');
+      return;
+    }
+
+    setUpvotingId(commentId);
+
+    try {
+      const { error } = await supabase.rpc('increment_comment_upvote', {
+        p_comment_id: commentId,
+      });
+
+      if (error) {
+        console.error('Upvote error:', error);
+        toast.error('Failed to upvote');
+        return;
+      }
+
+      // Update local state optimistically
+      setComments((prev) =>
+        prev.map((comment) =>
+          comment.id === commentId
+            ? { ...comment, upvotes: (comment.upvotes ?? 0) + 1 }
+            : comment
+        )
+      );
+    } catch (err) {
+      console.error('Unexpected upvote error:', err);
+      toast.error('Failed to upvote');
+    } finally {
+      setUpvotingId(null);
     }
   };
 
@@ -370,6 +429,31 @@ export default function MarketDetailPage() {
                 </Card>
               )}
 
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Sort by:</span>
+                <Button
+                  variant={commentSort === 'new' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setCommentSort('new')}
+                >
+                  New
+                </Button>
+                <Button
+                  variant={commentSort === 'top' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setCommentSort('top')}
+                >
+                  Top
+                </Button>
+                <Button
+                  variant={commentSort === 'hot' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setCommentSort('hot')}
+                >
+                  Hot
+                </Button>
+              </div>
+
               {comments.length === 0 ? (
                 <Card className="p-6 text-center text-muted-foreground">
                   No comments yet. Start the discussion!
@@ -388,8 +472,13 @@ export default function MarketDetailPage() {
                         </div>
                         <p className="text-sm">{comment.body}</p>
                         <div className="mt-2 flex items-center gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => {}}>
-                            👍 {comment.upvotes}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleUpvote(comment.id)}
+                            disabled={upvotingId === comment.id}
+                          >
+                            👍 {comment.upvotes ?? 0}
                           </Button>
                         </div>
                       </div>
