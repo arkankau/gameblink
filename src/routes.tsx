@@ -8,6 +8,7 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import DailyLoginPage from './pages/DailyLoginPage';
 import ProfilePage from './pages/ProfilePage';
 import MyBetsPage from './pages/MyBetsPage';
+import AdminSyncPage from './pages/AdminSyncPage';
 import type { ReactNode } from 'react';
 
 export interface RouteConfig {
@@ -79,5 +80,12 @@ export const routes: RouteConfig[] = [
     path: '/daily',
     element: <DailyLoginPage />,
     public: false,
+  },
+  {
+    name: 'Admin Sync',
+    path: '/admin/sync',
+    element: <AdminSyncPage />,
+    public: false,
+    visible: false,
   },
 ];
