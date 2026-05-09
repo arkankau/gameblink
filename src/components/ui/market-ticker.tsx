@@ -17,7 +17,7 @@ export function MarketTicker() {
       .from('markets')
       .select('*')
       .eq('hot', true)
-      .eq('status', 'active')
+      .eq('status', 'live')
       .limit(10);
 
     // Fallback to top volume markets if no hot markets
@@ -25,7 +25,7 @@ export function MarketTicker() {
       const result = await supabase
         .from('markets')
         .select('*')
-        .eq('status', 'active')
+        .eq('status', 'live')
         .order('volume', { ascending: false })
         .limit(10);
       data = result.data;
